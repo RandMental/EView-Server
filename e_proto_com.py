@@ -81,3 +81,8 @@ class ePacketKeyUndef(ePacketKey):
         return ePacketKeyUndef(keyId, data)
     def getKeyId(self):
         return self.keyId;
+
+def firstByteToIntSigned(val):
+    if(val > 127):
+        return (~0xFF) | val;
+    return val;

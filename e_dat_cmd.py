@@ -178,7 +178,7 @@ class keyLocateGps(ePacketKey):
 
     def decode(keyId, data):
         offset=0;
-        lat = data[offset+3];
+        lat = firstByteToIntSigned(data[offset+3]);
         lat <<= 8;
         lat |= data[offset+2]&0xFF;
         lat <<= 8;
@@ -187,7 +187,7 @@ class keyLocateGps(ePacketKey):
         lat |= data[offset+0]&0xFF;
 
         offset += 4;
-        lng = data[offset+3];
+        lng = firstByteToIntSigned(data[offset+3]);
         lng <<= 8;
         lng |= data[offset+2]&0xFF;
         lng <<= 8;
@@ -206,7 +206,7 @@ class keyLocateGps(ePacketKey):
         direction |= data[offset+0]&0xFF;
 
         offset += 2;
-        alt = data[offset+1];
+        alt = firstByteToIntSigned(data[offset+1]);
         alt <<= 8;
         alt |= data[offset+0]&0xFF;
 
