@@ -12,7 +12,7 @@ from threading import Timer
 from e_packet import ePacket
 from e_proto_com import *
 
-DEFAULT_ADDR = "127.0.0.1";
+DEFAULT_ADDR = "0.0.0.0";#"127.0.0.1";
 DEFAULT_PORT = 8889;
 RX_TIME_OUT = 300;
 g_seqId_req = 1;
@@ -44,24 +44,24 @@ def client_send(sock, pkt):
         print(f"[socket]Execption: {str(e)}")
 
 def rx_data_proc(sock, rx_queue, data):
-	all_data = rx_queue + data;
-	offset = 0;
-	while(offset < len(all_data)):
-	    rpkt = ePacket()
-	    result = rpkt.decode(all_data, offset);
-	    print(f'[parse]{result}');
-	    offset = result[1];
-	    if(result[0] > 0):
-	    	break;
-	    if(result[0] <0):
-	    	continue;
-	    print(f'[recv]{str(rpkt)}');
-	    apkt = rpkt.ack();
-	    print(f'[ack]{str(apkt[0])}');
-	    if(apkt[0] > 0):
-	    	print(f'[send]{str(apkt[1])}');
-	    	client_send(sock, apkt[1]);
-	return all_data[offset:];
+    all_data = rx_queue + data;
+    offset = 0;
+    while(offset < len(all_data)):
+        rpkt = ePacket()
+        result = rpkt.decode(all_data, offset);
+        print(f'[parse]{result}');
+        offset = result[1];
+        if(result[0] > 0):
+            break;
+        if(result[0] <0):
+            continue;
+        print(f'[recv]{str(rpkt)}');
+        apkt = rpkt.ack();
+        print(f'[ack]{str(apkt[0])}');
+        if(apkt[0] > 0):
+            print(f'[send]{str(apkt[1])}');
+            client_send(sock, apkt[1]);
+    return all_data[offset:];
 
 def genSingleLocReqData():
     global g_seqId_req;
@@ -74,19 +74,19 @@ def genSingleLocReqData():
     return pkt;
 
 def demo_cmd_to_dev(sock):
-	global g_seqId_req;
-	client_send(sock, genSingleLocReqData());
-	g_seqId_req +=1;
+    global g_seqId_req;
+    client_send(sock, genSingleLocReqData());
+    g_seqId_req +=1;
 
 def demo_cmd_to_dev_start_timer(sock):
     t = Timer(1800, demo_cmd_to_dev, args=(sock,));
     t.start();
     return t;
 def demo_cmd_to_dev_stop_timer(t):
-	t.cancel();
+    t.cancel();
 
 def rx_work_timeout(sock):
-	client_close(sock);
+    client_close(sock);
 
 def rx_work_start_timer(sock):
     t = Timer(RX_TIME_OUT, rx_work_timeout, args=(sock,));
@@ -94,13 +94,13 @@ def rx_work_start_timer(sock):
     return t;
 
 def rx_work_reset_timer(t, sock):
-	t.cancel();
-	t = Timer(RX_TIME_OUT, rx_work_timeout, args=(sock,));
-	t.start();
-	return t;
+    t.cancel();
+    t = Timer(RX_TIME_OUT, rx_work_timeout, args=(sock,));
+    t.start();
+    return t;
 
 def rx_work_stop_timer(t):
-	t.cancel();
+    t.cancel();
 
 def receive_handle(sock, addr):
     print(f"[socket]{str(addr)} rx start")
@@ -129,28 +129,28 @@ def receive_handle(sock, addr):
     print(f"[socket]{str(addr)} rx exit!")
 
 def server_init():
-	global DEFAULT_PORT;
-	print(f"[socket]server port {DEFAULT_PORT}");
+    global DEFAULT_PORT;
+    global DEFAULT_ADDR;
+    print(f"[socket]server {DEFAULT_ADDR}:{DEFAULT_PORT}");
 
 def server_start():
-	global DEFAULT_PORT;
-	global DEFAULT_ADDR;
-	serversocket = socket.socket(
-            socket.AF_INET, socket.SOCK_STREAM);
-	host = socket.gethostname();
-	serversocket.bind((host, DEFAULT_PORT));
-	serversocket.listen(5);
-	while True:
-		clientsocket,addr = serversocket.accept();
-		print(f"[socket]accept client {str(addr)}");
-		receive_thread = threading.Thread(target=receive_handle, args=(clientsocket,addr,));
-		receive_thread.start();
+    global DEFAULT_PORT;
+    global DEFAULT_ADDR;
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+    #host = socket.gethostname();
+    serversocket.bind((DEFAULT_ADDR, DEFAULT_PORT));
+    serversocket.listen(5);
+    while True:
+        clientsocket,addr = serversocket.accept();
+        print(f"[socket]accept client {str(addr)}");
+        receive_thread = threading.Thread(target=receive_handle, args=(clientsocket,addr,));
+        receive_thread.start();
 
 def main():
     server_init();
     time.sleep(1);
     try:
-    	server_start();
+        server_start();
     except ConnectionRefusedError as e:
         print(f"[socket] {str(e)}")
     except Exception as e:
