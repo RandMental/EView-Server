@@ -30,6 +30,12 @@ class ePacketDataCmd(ePacketCmd):
             offset += 1 + length;
         return cmd;
 
+    def findDeviceId(self):
+        for key in self.keys:
+            if(key.getKeyId() == 0x01):
+                return key.devId;
+        return None; 
+
 class keyDeviceId(ePacketKey):
     def __init__(self, imei):
         ePacketKey.__init__(self, 0x01)

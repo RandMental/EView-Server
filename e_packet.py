@@ -8,6 +8,7 @@ from e_proto_com import *
 from e_neg_cmd import *
 from e_srv_cmd import *
 from e_dat_cmd import *
+from e_cfg_cmd import *
 
 class ePacket:
     CRC_OFFSET = 4
@@ -78,6 +79,7 @@ class ePacket:
             0x7F:ePacketNegCmd.decode,
             0x03:ePacketSrvCmd.decode,
             0x01:ePacketDataCmd.decode,
+            0x02:ePacketCfgCmd.decode,
             0x00:ePacketCmd.decode
         }
         print(f"cmdId={cmdId}")
@@ -85,6 +87,13 @@ class ePacket:
         #print(f"cmdId={cmd_method_func}")
         self.cmds.append(cmd_method_func(cmdId, cmd_data[1:len_body]))
         return (0, offset + 8 + len_body)
+
+    def findDeviceId(self):
+        for cmd in self.cmds:
+            devId = cmd.findDeviceId();
+            if(devId):
+                return devId;
+        return None;
 
     def bytesToHexStr(data):
         result_s = "";

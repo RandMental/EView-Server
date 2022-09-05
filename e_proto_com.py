@@ -41,6 +41,9 @@ class ePacketCmd:
         return self.cmdId;
     def ack(self):
         return (0, None);
+        
+    def findDeviceId(self):
+        return None;
 
 class ePacketKey:
     def __init__(self, keyId):

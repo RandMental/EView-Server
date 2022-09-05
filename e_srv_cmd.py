@@ -51,6 +51,11 @@ class ePacketSrvCmd(ePacketCmd):
                 #Need you implements
                 return(0, None); 
         return (0, None);
+    def findDeviceId(self):
+        for key in self.keys:
+            if(key.getKeyId() == 0x01):
+                return key.devId;
+        return None; 
 
 class keySrvDevId(ePacketKey):
     def __init__(self):
