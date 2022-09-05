@@ -199,7 +199,7 @@ def server_init():
 def server_start():
     global DEFAULT_PORT;
     global DEFAULT_ADDR;
-    demo_cmd_to_dev_start_timer();#for test demo
+    #demo_cmd_to_dev_start_timer();#for test demo
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
     #host = socket.gethostname();
     serversocket.bind((DEFAULT_ADDR, DEFAULT_PORT));
