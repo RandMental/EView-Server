@@ -64,7 +64,7 @@ class keyGeneralData(ePacketKey):
         ePacketKey.__init__(self, 0x24)
         if(utc_time == 0):
             utc_time = int(time.time());
-        #print(f"{utc_time}")
+        print(f"{utc_time}")
         self.utc_time = utc_time
         self.status = 0
 
@@ -145,8 +145,8 @@ class keyLocateGps(ePacketKey):
 
     def __str__(self):
         result_s = "";
-        result_s += f'"lat":{self.lat}\n';
-        result_s += f'"lng":{self.lng}\n';
+        result_s += f'"lat ":{self.lat}\n';
+        result_s += f'"long":{self.lng}\n';
         result_s += f'"speed":{self.speed}\n';
         result_s += f'"direction":{self.direction}\n';
         result_s += f'"alt":{self.alt}\n';

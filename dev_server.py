@@ -71,10 +71,10 @@ def plot_on_google_maps(utc_time, lat, lng, speed):
     google_maps_url = f"https://www.google.com/maps/place/{corrected_lat},{corrected_lng}/@{corrected_lat},{corrected_lng},15z"
 
     # Print the converted time and coordinates for reference
-    print(f"UTC Time: {readable_time}")
-    print(f"Latitude: {corrected_lat}, Longitude: {corrected_lng}")
-    print(f"Speed: {speed} units")
-    print(f"Opening Google Maps at the specified location...")
+    #print(f"UTC Time: {readable_time}")
+    #print(f"Latitude: {corrected_lat}, Longitude: {corrected_lng}")
+    #print(f"Speed: {speed} units")
+    #print(f"Opening Google Maps at the specified location...")
 
     # Open the URL in the default web browser
     webbrowser.open(google_maps_url)
