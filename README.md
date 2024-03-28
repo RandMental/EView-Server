@@ -1,1 +1,1 @@
-LabfineView Server with Google 
+Labfin eView Server with Google Maps 
