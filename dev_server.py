@@ -4,24 +4,86 @@
 # @Author  : zhangyong
 # @File    : dev_server.py
 # @Software: Server Demo python3
+
+
+import re
 import socket
 import threading
-import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from threading import Timer
 from e_packet import ePacket
 from e_proto_com import *
 from e_cfg_cmd import *
 from dev_sock_list import *
 
-DEFAULT_ADDR = "0.0.0.0";#"127.0.0.1";
-DEFAULT_PORT = 8889;
-RX_TIME_OUT = 300;
-g_seqId_req = 1;
+DEFAULT_ADDR = ''
+DEFAULT_PORT = 6060
+RX_TIME_OUT = 300
+g_seqId_req = 1
 g_device_sock_list = deviceToSocketDict();
+
+import webbrowser
+import time
+
+
+
+# Define a function to decode the string
+# Define a function to decode the string
+def decode_gps_data(packet_str):
+    # Define regular expressions for extracting data
+    utc_time_pattern = r'"utc_time":(\d+)'
+    lat_pattern = r'"lat ":(-?\d+)'
+    lng_pattern = r'"long":(-?\d+)'
+    speed_pattern = r'"speed":(\d+)'
+    gps_status_pattern = r'"gps":(True|False)'
+
+    # Search for patterns and extract data
+    utc_time_match = re.search(utc_time_pattern, packet_str)
+    lat_match = re.search(lat_pattern, packet_str)
+    lng_match = re.search(lng_pattern, packet_str)
+    speed_match = re.search(speed_pattern, packet_str)
+    gps_status_match = re.search(gps_status_pattern, packet_str)
+
+    # Extract values, converting them to appropriate types
+    utc_time = int(utc_time_match.group(1)) if utc_time_match else None
+    lat = int(lat_match.group(1)) if lat_match else None
+    lng = int(lng_match.group(1)) if lng_match else None
+    speed = int(speed_match.group(1)) if speed_match else None
+    gps_status = gps_status_match.group(1) == 'True' if gps_status_match else None
+
+    # Convert UTC time to timezone-aware datetime object and adjust for timezone (+2 hours)
+    utc_datetime = datetime.fromtimestamp(utc_time, timezone.utc)
+    local_timezone = timezone(timedelta(hours=2))
+    local_datetime = utc_datetime.astimezone(local_timezone).strftime('%d/%m/%Y %H:%M:%S')
+
+    return local_datetime, utc_time, lat, lng, speed, gps_status
+
+def plot_on_google_maps(utc_time, lat, lng, speed):
+    # Convert timestamp to readable format (unused in URL but useful for reference)
+    readable_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(utc_time))
+
+    # Correcting the latitude and longitude values
+    corrected_lat = lat / 10000000
+    corrected_lng = lng / 10000000
+
+    # Create the Google Maps URL
+    # Create the Google Maps URL for a place (which adds a marker)
+    google_maps_url = f"https://www.google.com/maps/place/{corrected_lat},{corrected_lng}/@{corrected_lat},{corrected_lng},15z"
+
+    # Print the converted time and coordinates for reference
+    print(f"UTC Time: {readable_time}")
+    print(f"Latitude: {corrected_lat}, Longitude: {corrected_lng}")
+    print(f"Speed: {speed} units")
+    print(f"Opening Google Maps at the specified location...")
+
+    # Open the URL in the default web browser
+    webbrowser.open(google_maps_url)
+
+
+
 def client_close(sock):
     g_device_sock_list.offline(sock);
-    timestr = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S");
+    timestr = datetime.now().strftime("%Y-%m-%d %H:%M:%S");
     print(f"{timestr} [socket]close start...")
     try:
         sock.shutdown(socket.SHUT_RDWR);
@@ -34,7 +96,7 @@ def client_close(sock):
         print(f"[socket]Execption2: {str(e)}")
 
 def client_send(sock, pkt):
-    timestr = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S");
+    timestr = datetime.now().strftime("%Y-%m-%d %H:%M:%S");
     try:
         print(f"{timestr} [send]{pkt.toHexStr()}");
         sock.send(bytes(pkt.serialize()));
@@ -61,6 +123,23 @@ def rx_data_proc(sock, rx_queue, data):
         if(result[0] <0):
             continue;
         print(f'[recv]{str(rpkt)}');
+
+        # Decode the string and assign variables
+        local_datetime, utc_time, lat, lng, speed, gps_status = decode_gps_data(str(rpkt))
+
+        # Print extracted variables for verification
+        print('===========================================================')
+        print(f"GPS Status: {gps_status}")
+        if gps_status:
+            print(f"UTC Time: {utc_time}")
+            print(f"Local Time: {local_datetime}")
+
+            print(f"Latitude: {lat}")
+            print(f"Longitude: {lng}")
+            print(f"Speed: {speed} km/h\n\n")
+
+            plot_on_google_maps(utc_time, lat, lng, speed)
+
         apkt = rpkt.ack();
         print(f'[ack]{str(apkt[0])}');
         if(apkt[0] > 0):
@@ -74,7 +153,8 @@ def rx_data_proc(sock, rx_queue, data):
                     print(f"[socket]tick out old {devId}");
                     client_close(old_sock);
                 g_device_sock_list.online(devId, sock);
-    return all_data[offset:];
+
+    return all_data[offset:]
 
 def genSingleLocReqData():
     global g_seqId_req;
@@ -177,7 +257,7 @@ def receive_handle(sock, addr):
             if(data == b''):
                 break;
             else:
-                timestr = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S");
+                timestr = datetime.now().strftime("%Y-%m-%d %H:%M:%S");
                 print(f'{timestr} [recv]{ePacket.bytesToHexStr(data)}')
                 rx_queue = rx_data_proc(sock, rx_queue, data);
                 work_timer = rx_work_reset_timer(work_timer, sock);
@@ -219,6 +299,10 @@ def main():
         print(f"[socket] {str(e)}")
     except Exception as e:
         print(f"[socket] {str(e)}")
+
+
+    #plot_on_google_maps(utc_time,lat,long,speed)
+
 
 if __name__ == '__main__':
     main()
